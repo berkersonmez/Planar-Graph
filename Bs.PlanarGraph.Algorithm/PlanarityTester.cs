@@ -27,6 +27,7 @@ namespace Bs.PlanarGraph.Algorithm
 
         public IEnumerable<string> ApplySimplifyingStep()
         {
+            SimplifyResult = SimplifyResult.CannotSimplifyAgain;
 
             List<Graph> newGraphParts = new List<Graph>();
 
@@ -46,7 +47,6 @@ namespace Bs.PlanarGraph.Algorithm
             newGraphParts.Clear();
 
             // PREPROCESSING 2: If the graph has cut-vertices, then test each block separately.
-            // TODO: This is implemented wrong, do not delete node since we consider blocks.
             foreach (Graph graphPart in GraphParts)
             {
                 CutVerticesFinder cvf = new CutVerticesFinder();
@@ -54,13 +54,30 @@ namespace Bs.PlanarGraph.Algorithm
                 if (cutNodes != null && cutNodes.Count > 1)
                 {
                     SimplifyResult = SimplifyResult.CanSimplifyAgain;
+                    // Since we consider "blocks" we need to add back the edges incident to
+                    // cut nodes to get blocks including cut nodes and their edges.
+                    List<Edge> edgesToAddBack = new List<Edge>();
                     foreach (Node cutNode in cutNodes)
                     {
                         List<Edge> edges = graphPart.GetEdges(cutNode);
+                        edgesToAddBack.AddRange(edges);
                         edges.ForEach(e => graphPart.Edges.Remove(e));
                         graphPart.Nodes.Remove(cutNode);
                     }
-                    newGraphParts.AddRange(graphPart.SplitDisonnectedComponents());
+                    foreach (Graph disonnectedComponent in graphPart.SplitDisonnectedComponents())
+                    {
+                        foreach (Edge edgeToAddBack in edgesToAddBack)
+                        {
+                            Node nodeInComponent = disonnectedComponent.Nodes.FirstOrDefault(n => n == edgeToAddBack.Node1 || n == edgeToAddBack.Node2);
+                            if (nodeInComponent != null)
+                            {
+                                Node cutNode = edgeToAddBack.Node1 == nodeInComponent ? edgeToAddBack.Node2 : edgeToAddBack.Node1;
+                                disonnectedComponent.AddNode(cutNode);
+                                disonnectedComponent.AddEdge(edgeToAddBack);
+                            }
+                        }
+                        newGraphParts.Add(disonnectedComponent);
+                    }
                 }
                 else
                 {
@@ -115,7 +132,6 @@ namespace Bs.PlanarGraph.Algorithm
                 else if (e > 3*n - 6)
                 {
                     PlanarityResult = PlanarityResult.NonPlanar;
-                    SimplifyResult = SimplifyResult.CannotSimplifyAgain;
                 }
             }
 
@@ -127,7 +143,6 @@ namespace Bs.PlanarGraph.Algorithm
             if (GraphParts.Count == 0)
             {
                 PlanarityResult = PlanarityResult.Planar;
-                SimplifyResult = SimplifyResult.CannotSimplifyAgain;
             }
 
             yield return "PREPROCESS STEP 4: Removed planar components...";
