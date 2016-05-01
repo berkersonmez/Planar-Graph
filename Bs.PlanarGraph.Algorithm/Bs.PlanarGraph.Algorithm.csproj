@@ -40,10 +40,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BridgeFinder.cs" />
+    <Compile Include="CircuitFinder.cs" />
     <Compile Include="CutVerticesFinder.cs" />
     <Compile Include="Entities\Edge.cs" />
+    <Compile Include="Entities\Face.cs" />
     <Compile Include="Entities\Graph.cs" />
     <Compile Include="Entities\Node.cs" />
+    <Compile Include="PathFinder.cs" />
     <Compile Include="PlanarityResult.cs" />
     <Compile Include="PlanarityTester.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

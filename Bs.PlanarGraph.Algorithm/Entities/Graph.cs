@@ -8,6 +8,11 @@ namespace Bs.PlanarGraph.Algorithm.Entities
     {
         public List<Edge> Edges { get; set; }
         public List<Node> Nodes { get; set; }
+        public List<Face> Faces { get; set; } 
+
+        // If the graph is a bridge, this holds the list of nodes that are the points
+        // of contract to the main graph
+        public List<Node> PointsOfContract { get; set; } 
 
         public Graph()
         {
@@ -55,10 +60,8 @@ namespace Bs.PlanarGraph.Algorithm.Entities
             return edge;
         }
 
-        /// <summary>
-        /// If the graph is not connected, get a list of connected components of the graph.
-        /// </summary>
-        /// <returns>Connected components as graph representation.</returns>
+        // If the graph is not connected, get a list of connected components of the graph.
+        // Uses breadth-first search to explore nodes.
         public List<Graph> SplitDisonnectedComponents()
         {
             List<Graph> connComps = new List<Graph>();
@@ -125,6 +128,85 @@ namespace Bs.PlanarGraph.Algorithm.Entities
             edgeList.AddRange(Edges.Where(e => e.Node1 == node));
             edgeList.AddRange(Edges.Where(e => e.Node2 == node));
             return edgeList;
+        }
+
+        // While this graph is a circuit, this function initializes its faces
+        public void SetCircuitFaces()
+        {
+            Faces = new List<Face>();
+            Face innerFace = new Face();
+            Face outerFace = new Face();
+            foreach (Edge edge in Edges)
+            {
+                innerFace.AddEdge(edge);
+                innerFace.AddNode(edge.Node1);
+                innerFace.AddNode(edge.Node2);
+                outerFace.AddEdge(edge);
+                outerFace.AddNode(edge.Node1);
+                outerFace.AddNode(edge.Node2);
+            }
+            Faces.Add(innerFace);
+            Faces.Add(outerFace);
+        }
+
+        // Simulates the drawing of the edges into the designated face
+        // and splits the face into two
+        public void AddBridgeAndSeperateFace(List<Edge> edgesToAdd, Face face, Node[] pointsOfContract)
+        {
+            Face face1 = new Face();
+            Face face2 = new Face();
+            foreach (Edge edge in edgesToAdd)
+            {
+                AddNode(edge.Node1);
+                AddNode(edge.Node2);
+                AddEdge(edge);
+                face1.AddNode(edge.Node1);
+                face1.AddNode(edge.Node2);
+                face1.AddEdge(edge);
+                face2.AddNode(edge.Node1);
+                face2.AddNode(edge.Node2);
+                face2.AddEdge(edge);
+            }
+            Face oldFace = face;
+            Edge faceEdge = oldFace.Edges.First(e => e.Node1 == pointsOfContract[0] || e.Node2 == pointsOfContract[0]);
+            Node prevNode = pointsOfContract[0];
+            Node otherNode;
+            while (faceEdge.Node1 != PointsOfContract[1] || faceEdge.Node2 != PointsOfContract[1])
+            {
+                face1.AddNode(faceEdge.Node1);
+                face1.AddNode(faceEdge.Node2);
+                face1.AddEdge(faceEdge);
+                otherNode = faceEdge.OtherNode(prevNode);
+                faceEdge = oldFace.GetNextEdge(faceEdge, prevNode);
+                prevNode = otherNode;
+            }
+            face1.AddNode(faceEdge.Node1);
+            face1.AddNode(faceEdge.Node2);
+            face1.AddEdge(faceEdge);
+            otherNode = faceEdge.OtherNode(prevNode);
+            faceEdge = oldFace.GetNextEdge(faceEdge, prevNode);
+            prevNode = otherNode;
+            while (faceEdge.Node1 != PointsOfContract[0] || faceEdge.Node2 != PointsOfContract[0])
+            {
+                face2.AddNode(faceEdge.Node1);
+                face2.AddNode(faceEdge.Node2);
+                face2.AddEdge(faceEdge);
+                otherNode = faceEdge.OtherNode(prevNode);
+                faceEdge = oldFace.GetNextEdge(faceEdge, prevNode);
+                prevNode = otherNode;
+            }
+            face2.AddNode(faceEdge.Node1);
+            face2.AddNode(faceEdge.Node2);
+            face2.AddEdge(faceEdge);
+
+            Faces.Remove(oldFace);
+            Faces.Add(face1);
+            Faces.Add(face2);
+        }
+
+        public Edge GetEdge(Node node1, Node node2)
+        {
+            return Edges.FirstOrDefault(e => (e.Node1 == node1 && e.Node2 == node2) || (e.Node2 == node1 && e.Node1 == node2));
         }
 
         public object Clone()

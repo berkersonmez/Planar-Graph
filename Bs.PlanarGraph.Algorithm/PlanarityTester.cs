@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Bs.PlanarGraph.Algorithm.Entities;
 
@@ -11,6 +12,7 @@ namespace Bs.PlanarGraph.Algorithm
         public PlanarityResult PlanarityResult { get; set; }
         public SimplifyResult SimplifyResult { get; set; }
 
+        // TODO: Make quick test function to test planarity without going step by step
         //public bool Test(Graph graph)
         //{
         //    MainGraph = graph;
@@ -97,6 +99,7 @@ namespace Bs.PlanarGraph.Algorithm
                     if (edges.Count == 1)
                     {
                         // Node with degree 1 is irrelevant to planarity, we can just remove.
+                        // This step may even be not needed.
                         graphPart.Edges.Remove(edges[0]);
                         graphPart.Nodes.Remove(graphPart.Nodes[i]);
                         i--;
@@ -150,7 +153,67 @@ namespace Bs.PlanarGraph.Algorithm
 
         public void ApplyPlanarityTestStep()
         {
-            
+            foreach (Graph graphPart in GraphParts)
+            {
+                CircuitFinder circuitFinder = new CircuitFinder();
+                Graph circuit = circuitFinder.FindCircuit(graphPart);
+                circuit.SetCircuitFaces();
+                bool embeddable = true;
+                int f = 2;
+                int e = graphPart.Edges.Count;
+                int n = graphPart.Nodes.Count;
+
+                while (f != e - n + 2 && embeddable)
+                {
+                    BridgeFinder bridgeFinder = new BridgeFinder();
+                    List<Graph> bridges = bridgeFinder.FindBridges(graphPart, circuit);
+                    // Find F(B,Gi) in the algorithm (which faces can the bridge be drawn on)
+                    Dictionary<Graph, List<Face>> bridgeDrawableFaces = new Dictionary<Graph, List<Face>>();
+                    foreach (Graph bridge in bridges)
+                    {
+                        bridgeDrawableFaces[bridge] = new List<Face>();
+                        foreach (Face face in circuit.Faces)
+                        {
+                            if (bridge.PointsOfContract.All(p => face.Nodes.Contains(p)))
+                            {
+                                bridgeDrawableFaces[bridge].Add(face);
+                            }
+                        }
+                        if (bridgeDrawableFaces[bridge].Count == 0)
+                        {
+                            embeddable = false;
+                            PlanarityResult = PlanarityResult.NonPlanar;
+                            break;
+                        }
+                    }
+                    if (embeddable)
+                    {
+                        Graph selectedBridge = bridges.FirstOrDefault(b => bridgeDrawableFaces[b].Count == 1);
+                        Face selectedFace;
+                        if (selectedBridge != null)
+                        {
+                            // For some B, |F(B,Gi)| = 1 then f = F(B,Gi)
+                            selectedFace = bridgeDrawableFaces[selectedBridge][0];
+                        }
+                        else
+                        {
+                            // Let B be any bridge and f be any face, f ∈F(B,Gi)
+                            selectedBridge = bridges[0];
+                            selectedFace = bridgeDrawableFaces[selectedBridge][0];
+                        }
+                        // Find a path Pi⊆B connecting two points of contact of B to Gi
+                        PathFinder pathFinder = new PathFinder();
+                        List<Edge> pathInBridge = pathFinder.FindPath(selectedBridge, selectedBridge.PointsOfContract[0], selectedBridge.PointsOfContract[1]);
+
+                        // Draw Pi in the face f of Gi
+                        circuit.AddBridgeAndSeperateFace(pathInBridge, selectedFace, new []{ selectedBridge.PointsOfContract[0], selectedBridge.PointsOfContract[1] });
+
+                        f++;
+                    }
+                }
+                if (PlanarityResult == PlanarityResult.NonPlanar) break;
+            }
+            PlanarityResult = PlanarityResult.Planar;
         }
 
     }

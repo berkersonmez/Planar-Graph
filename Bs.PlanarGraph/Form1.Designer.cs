@@ -36,8 +36,8 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.textBoxStatus = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.buttonSimplifyStep = new System.Windows.Forms.Button();
             this.buttonApplyPlanarityStep = new System.Windows.Forms.Button();
+            this.buttonSimplifyStep = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.graphView)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -125,6 +125,16 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Controls";
             // 
+            // buttonApplyPlanarityStep
+            // 
+            this.buttonApplyPlanarityStep.Location = new System.Drawing.Point(10, 49);
+            this.buttonApplyPlanarityStep.Name = "buttonApplyPlanarityStep";
+            this.buttonApplyPlanarityStep.Size = new System.Drawing.Size(316, 23);
+            this.buttonApplyPlanarityStep.TabIndex = 1;
+            this.buttonApplyPlanarityStep.Text = "Apply Planarity Test Step";
+            this.buttonApplyPlanarityStep.UseVisualStyleBackColor = true;
+            this.buttonApplyPlanarityStep.Click += new System.EventHandler(this.buttonApplyPlanarityStep_Click);
+            // 
             // buttonSimplifyStep
             // 
             this.buttonSimplifyStep.Location = new System.Drawing.Point(10, 20);
@@ -134,15 +144,6 @@
             this.buttonSimplifyStep.Text = "Apply Simplify Step";
             this.buttonSimplifyStep.UseVisualStyleBackColor = true;
             this.buttonSimplifyStep.Click += new System.EventHandler(this.buttonSimplifyStep_Click);
-            // 
-            // buttonApplyPlanarityStep
-            // 
-            this.buttonApplyPlanarityStep.Location = new System.Drawing.Point(10, 49);
-            this.buttonApplyPlanarityStep.Name = "buttonApplyPlanarityStep";
-            this.buttonApplyPlanarityStep.Size = new System.Drawing.Size(316, 23);
-            this.buttonApplyPlanarityStep.TabIndex = 1;
-            this.buttonApplyPlanarityStep.Text = "Apply Planarity Test Step";
-            this.buttonApplyPlanarityStep.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 

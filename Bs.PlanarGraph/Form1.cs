@@ -164,5 +164,17 @@ namespace Bs.PlanarGraph
             buttonApplyPlanarityStep.Enabled = true;
             buttonInitGraph.Enabled = true;
         }
+
+        private void buttonApplyPlanarityStep_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                PlanarityTester.ApplyPlanarityTestStep();
+            }
+            catch (Exception ex)
+            {
+                WriteStatus("Error testing planarity: " + ex.Message);
+            }
+        }
     }
 }
