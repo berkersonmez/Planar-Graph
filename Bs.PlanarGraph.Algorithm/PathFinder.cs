@@ -21,8 +21,10 @@ namespace Bs.PlanarGraph.Algorithm
             Path = new List<Node>();
             Graph = graph;
             FoundPath = false;
-            List<Edge> pathEdges = new List<Edge>(); 
-                
+            FinishNode = to;
+            List<Edge> pathEdges = new List<Edge>();
+            Path.Add(from);
+
             ConstructPathDfs(from);
 
             for (int i = 1; i < Path.Count; i++)

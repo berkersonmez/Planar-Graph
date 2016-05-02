@@ -130,8 +130,8 @@ namespace Bs.PlanarGraph.Algorithm.Entities
             return edgeList;
         }
 
-        // While this graph is a circuit, this function initializes its faces
-        public void SetCircuitFaces()
+        // While this graph is a cycle, this function initializes its faces
+        public void SetCycleFaces()
         {
             Faces = new List<Face>();
             Face innerFace = new Face();
@@ -171,7 +171,7 @@ namespace Bs.PlanarGraph.Algorithm.Entities
             Edge faceEdge = oldFace.Edges.First(e => e.Node1 == pointsOfContract[0] || e.Node2 == pointsOfContract[0]);
             Node prevNode = pointsOfContract[0];
             Node otherNode;
-            while (faceEdge.Node1 != PointsOfContract[1] || faceEdge.Node2 != PointsOfContract[1])
+            while (faceEdge.Node1 != pointsOfContract[1] && faceEdge.Node2 != pointsOfContract[1])
             {
                 face1.AddNode(faceEdge.Node1);
                 face1.AddNode(faceEdge.Node2);
@@ -186,7 +186,7 @@ namespace Bs.PlanarGraph.Algorithm.Entities
             otherNode = faceEdge.OtherNode(prevNode);
             faceEdge = oldFace.GetNextEdge(faceEdge, prevNode);
             prevNode = otherNode;
-            while (faceEdge.Node1 != PointsOfContract[0] || faceEdge.Node2 != PointsOfContract[0])
+            while (faceEdge.Node1 != pointsOfContract[0] && faceEdge.Node2 != pointsOfContract[0])
             {
                 face2.AddNode(faceEdge.Node1);
                 face2.AddNode(faceEdge.Node2);

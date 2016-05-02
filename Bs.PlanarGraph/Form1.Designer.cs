@@ -155,7 +155,7 @@
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.graphView);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "Planarity Tester";
             ((System.ComponentModel.ISupportInitialize)(this.graphView)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();

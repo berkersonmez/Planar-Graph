@@ -19,6 +19,7 @@ namespace Bs.PlanarGraph.Algorithm
         bool[] IsCutVertice { get; set; }
         int Time { get; set; }
 
+        // Uses DFS approach to find cut vertices.
         public List<Node> FindCutVertices(Graph graph)
         {
             int n = graph.Nodes.Count;

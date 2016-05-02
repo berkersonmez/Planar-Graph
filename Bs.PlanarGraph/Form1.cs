@@ -12,6 +12,7 @@ using Bs.PlanarGraph.Algorithm.Entities;
 using GraphVizWrapper;
 using GraphVizWrapper.Commands;
 using GraphVizWrapper.Queries;
+using System.Configuration;
 
 namespace Bs.PlanarGraph
 {
@@ -19,10 +20,14 @@ namespace Bs.PlanarGraph
     {
         public Graph MainGraph { get; set; }
         public PlanarityTester PlanarityTester { get; set; }
+        private int WaitBetweenSimplifyingSteps { get; set; }
+        private int WaitBetweenTestingSteps { get; set; }
 
         public Form1()
         {
             InitializeComponent();
+            WaitBetweenSimplifyingSteps = int.Parse(ConfigurationManager.AppSettings["waitBetweenSimplifyingSteps"]);
+            WaitBetweenTestingSteps = int.Parse(ConfigurationManager.AppSettings["waitBetweenTestingSteps"]);
         }
 
         private string ConvertGraphToDot(Graph graph)
@@ -122,9 +127,47 @@ namespace Bs.PlanarGraph
 
         private void buttonSimplifyStep_Click(object sender, EventArgs e)
         {
+            ApplySimplifyingStepsByShowingProcesses();
+        }
+
+        private void buttonApplyPlanarityStep_Click(object sender, EventArgs e)
+        {
+            ApplyTestingStepByShowingProcess();
+        }
+
+        private async void ApplySimplifyingStepsByShowingProcesses()
+        {
             try
             {
-                ApplySimplifyingStepsByShowingProcesses();
+                buttonSimplifyStep.Enabled = false;
+                buttonApplyPlanarityStep.Enabled = false;
+                buttonInitGraph.Enabled = false;
+                foreach (string preprocessMessage in PlanarityTester.ApplySimplifyingStep())
+                {
+                    string dot = ConvertGraphToDot(PlanarityTester.GraphParts);
+                    VisualizeGraph(dot);
+                    WriteStatus(preprocessMessage);
+                    await Task.Delay(WaitBetweenSimplifyingSteps);
+                }
+
+                bool canSimplifyAgain = PlanarityTester.SimplifyResult == SimplifyResult.CanSimplifyAgain;
+                if (PlanarityTester.PlanarityResult == PlanarityResult.NonPlanar)
+                {
+                    WriteStatus("Graph is NON-PLANAR! This is determined in the simplifying step.");
+                }
+                else if (PlanarityTester.PlanarityResult == PlanarityResult.Planar)
+                {
+                    WriteStatus("Graph is PLANAR! This is determined in the simplifying step.");
+                }
+                else
+                {
+                    WriteStatus(canSimplifyAgain
+                        ? "Graph is simplified! It may be further simplified, click \"Apply Simplifying Step\" again."
+                        : "Graph is simplified! It cannot be simplified anymore. Click \"Apply Planarity Test Step\" button.");
+                }
+                buttonSimplifyStep.Enabled = true;
+                buttonApplyPlanarityStep.Enabled = true;
+                buttonInitGraph.Enabled = true;
             }
             catch (Exception ex)
             {
@@ -132,44 +175,36 @@ namespace Bs.PlanarGraph
             }
         }
 
-        private async void ApplySimplifyingStepsByShowingProcesses()
-        {
-            buttonSimplifyStep.Enabled = false;
-            buttonApplyPlanarityStep.Enabled = false;
-            buttonInitGraph.Enabled = false;
-            foreach (string preprocessMessage in PlanarityTester.ApplySimplifyingStep())
-            {
-                string dot = ConvertGraphToDot(PlanarityTester.GraphParts);
-                VisualizeGraph(dot);
-                WriteStatus(preprocessMessage);
-                await Task.Delay(2000);
-            }
-
-            bool canSimplifyAgain = PlanarityTester.SimplifyResult == SimplifyResult.CanSimplifyAgain;
-            if (PlanarityTester.PlanarityResult == PlanarityResult.NonPlanar)
-            {
-                WriteStatus("Graph is NON-PLANAR! This is determined in the simplifying step.");
-            }
-            else if (PlanarityTester.PlanarityResult == PlanarityResult.Planar)
-            {
-                WriteStatus("Graph is PLANAR! This is determined in the simplifying step.");
-            }
-            else
-            {
-                WriteStatus(canSimplifyAgain
-                    ? "Graph is simplified! It may be further simplified, click \"Apply Simplifying Step\" again."
-                    : "Graph is simplified! It cannot be simplified anymore. Click \"Apply Planarity Test Step\" button.");
-            }
-            buttonSimplifyStep.Enabled = true;
-            buttonApplyPlanarityStep.Enabled = true;
-            buttonInitGraph.Enabled = true;
-        }
-
-        private void buttonApplyPlanarityStep_Click(object sender, EventArgs e)
+        private async void ApplyTestingStepByShowingProcess()
         {
             try
             {
-                PlanarityTester.ApplyPlanarityTestStep();
+                buttonSimplifyStep.Enabled = false;
+                buttonApplyPlanarityStep.Enabled = false;
+                buttonInitGraph.Enabled = false;
+                foreach (string preprocessMessage in PlanarityTester.ApplyPlanarityTestStep())
+                {
+                    string dot = ConvertGraphToDot(PlanarityTester.SubGraph);
+                    VisualizeGraph(dot);
+                    WriteStatus(preprocessMessage);
+                    await Task.Delay(WaitBetweenTestingSteps);
+                }
+                VisualizeGraph(ConvertGraphToDot(PlanarityTester.GraphParts));
+                if (PlanarityTester.PlanarityResult == PlanarityResult.Planar)
+                {
+                    WriteStatus("Graph is PLANAR! This is determined in the planarity testing step.");
+                }
+                else if (PlanarityTester.PlanarityResult == PlanarityResult.NonPlanar)
+                {
+                    WriteStatus("Graph is NON-PLANAR! This is determined in the planarity testing step.");
+                }
+                else if (PlanarityTester.PlanarityResult == PlanarityResult.Undetermined)
+                {
+                    WriteStatus("Graph is UNDETERMINED! This shouldn't have happened :(");
+                }
+                buttonSimplifyStep.Enabled = true;
+                buttonApplyPlanarityStep.Enabled = true;
+                buttonInitGraph.Enabled = true;
             }
             catch (Exception ex)
             {

@@ -9,16 +9,9 @@ namespace Bs.PlanarGraph.Algorithm
     {
         public Graph MainGraph { get; set; }
         public List<Graph> GraphParts { get; set; } // <- Components of main graph, where planarity of all components mean planarity of main graph
+        public Graph SubGraph { get; set; }
         public PlanarityResult PlanarityResult { get; set; }
         public SimplifyResult SimplifyResult { get; set; }
-
-        // TODO: Make quick test function to test planarity without going step by step
-        //public bool Test(Graph graph)
-        //{
-        //    MainGraph = graph;
-
-
-        //}
 
         public PlanarityTester(Graph graph)
         {
@@ -27,6 +20,8 @@ namespace Bs.PlanarGraph.Algorithm
             PlanarityResult = PlanarityResult.Undetermined;
         }
 
+        // Main simplifying function.
+        // Should be called asynchronously to show status texts at each step.
         public IEnumerable<string> ApplySimplifyingStep()
         {
             SimplifyResult = SimplifyResult.CannotSimplifyAgain;
@@ -40,13 +35,16 @@ namespace Bs.PlanarGraph.Algorithm
             }
             if (newGraphParts.Count > GraphParts.Count)
             {
+                // When no simplification is done in a simplify step, then it can be said
+                // that the graph can no longer be simplified.
+                // Here, we did a simplification and we may simplify again in the next step.
                 SimplifyResult = SimplifyResult.CanSimplifyAgain;
                 GraphParts = newGraphParts;
             }
 
             yield return "PREPROCESS STEP 1: Seperated disconnected components...";
 
-            newGraphParts.Clear();
+            newGraphParts = new List<Graph>();
 
             // PREPROCESSING 2: If the graph has cut-vertices, then test each block separately.
             foreach (Graph graphPart in GraphParts)
@@ -63,11 +61,14 @@ namespace Bs.PlanarGraph.Algorithm
                     {
                         List<Edge> edges = graphPart.GetEdges(cutNode);
                         edgesToAddBack.AddRange(edges);
+                        // Cut nodes AND their edges are removed,
+                        // they will be added back to corresponding blocks.
                         edges.ForEach(e => graphPart.Edges.Remove(e));
                         graphPart.Nodes.Remove(cutNode);
                     }
                     foreach (Graph disonnectedComponent in graphPart.SplitDisonnectedComponents())
                     {
+                        // Now we add back the edges.
                         foreach (Edge edgeToAddBack in edgesToAddBack)
                         {
                             Node nodeInComponent = disonnectedComponent.Nodes.FirstOrDefault(n => n == edgeToAddBack.Node1 || n == edgeToAddBack.Node2);
@@ -99,7 +100,7 @@ namespace Bs.PlanarGraph.Algorithm
                     if (edges.Count == 1)
                     {
                         // Node with degree 1 is irrelevant to planarity, we can just remove.
-                        // This step may even be not needed.
+                        // This step may even be not needed (already removed previously).
                         graphPart.Edges.Remove(edges[0]);
                         graphPart.Nodes.Remove(graphPart.Nodes[i]);
                         i--;
@@ -122,7 +123,7 @@ namespace Bs.PlanarGraph.Algorithm
 
             yield return "PREPROCESS STEP 3: Each vertex of degree 2 plus its incident edges is replaced by a single edge...";
 
-            // Remove planar parts from "GraphParts" or determine if any of parts are non-planar
+            // Remove planar components from "GraphParts" or determine if any of components are non-planar
             List<Graph> partsToRemove = new List<Graph>();
             foreach (Graph graphPart in GraphParts)
             {
@@ -151,13 +152,29 @@ namespace Bs.PlanarGraph.Algorithm
             yield return "PREPROCESS STEP 4: Removed planar components...";
         }
 
-        public void ApplyPlanarityTestStep()
+        // Main planarity testing function.
+        // Should be called asynchronously to show status texts at each step.
+        public IEnumerable<string> ApplyPlanarityTestStep()
         {
+            int componentNo = 0; // This is just used to show text
             foreach (Graph graphPart in GraphParts)
             {
-                CircuitFinder circuitFinder = new CircuitFinder();
-                Graph circuit = circuitFinder.FindCircuit(graphPart);
-                circuit.SetCircuitFaces();
+                componentNo++;
+                // Find a circuit C of G
+                // Actually we find cycles because with circuits (where nodes may be repeated),
+                // there was a problem when detecting initial faces (there may be 3 faces)
+                // and I could not find a case where finding cycle did not work.
+                // It seems like the algorithm should say "cycle" instead of "circuit"
+                CycleFinder cycleFinder = new CycleFinder();
+                SubGraph = cycleFinder.FindCycle(graphPart);
+                if (SubGraph == null)
+                {
+                    // Graph has no cycles, thus is planar.
+                    continue;
+                }
+                yield return "TESTING PLANARITY: Found cycle for component " + componentNo;
+                // Determine faces as two faces with all nodes as their boundary
+                SubGraph.SetCycleFaces();
                 bool embeddable = true;
                 int f = 2;
                 int e = graphPart.Edges.Count;
@@ -166,13 +183,14 @@ namespace Bs.PlanarGraph.Algorithm
                 while (f != e - n + 2 && embeddable)
                 {
                     BridgeFinder bridgeFinder = new BridgeFinder();
-                    List<Graph> bridges = bridgeFinder.FindBridges(graphPart, circuit);
+                    // find each bridge B of G relative to Gi
+                    List<Graph> bridges = bridgeFinder.FindBridges(graphPart, SubGraph);
                     // Find F(B,Gi) in the algorithm (which faces can the bridge be drawn on)
                     Dictionary<Graph, List<Face>> bridgeDrawableFaces = new Dictionary<Graph, List<Face>>();
                     foreach (Graph bridge in bridges)
                     {
                         bridgeDrawableFaces[bridge] = new List<Face>();
-                        foreach (Face face in circuit.Faces)
+                        foreach (Face face in SubGraph.Faces)
                         {
                             if (bridge.PointsOfContract.All(p => face.Nodes.Contains(p)))
                             {
@@ -181,6 +199,7 @@ namespace Bs.PlanarGraph.Algorithm
                         }
                         if (bridgeDrawableFaces[bridge].Count == 0)
                         {
+                            // for some B, F(B,Gi)= ∅
                             embeddable = false;
                             PlanarityResult = PlanarityResult.NonPlanar;
                             break;
@@ -206,14 +225,20 @@ namespace Bs.PlanarGraph.Algorithm
                         List<Edge> pathInBridge = pathFinder.FindPath(selectedBridge, selectedBridge.PointsOfContract[0], selectedBridge.PointsOfContract[1]);
 
                         // Draw Pi in the face f of Gi
-                        circuit.AddBridgeAndSeperateFace(pathInBridge, selectedFace, new []{ selectedBridge.PointsOfContract[0], selectedBridge.PointsOfContract[1] });
+                        SubGraph.AddBridgeAndSeperateFace(pathInBridge, selectedFace, new []{ selectedBridge.PointsOfContract[0], selectedBridge.PointsOfContract[1] });
 
+                        yield return "TESTING PLANARITY: Added a bridge piece, total faces: " + f;
                         f++;
                     }
                 }
+                // If one of the components is Non-Planar, whole graph is non-planar
                 if (PlanarityResult == PlanarityResult.NonPlanar) break;
             }
-            PlanarityResult = PlanarityResult.Planar;
+            if (PlanarityResult == PlanarityResult.Undetermined)
+            {
+                // All components are processed and none is Non-planar
+                PlanarityResult = PlanarityResult.Planar;
+            }
         }
 
     }
