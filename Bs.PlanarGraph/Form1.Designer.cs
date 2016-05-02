@@ -38,17 +38,21 @@
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.buttonApplyPlanarityStep = new System.Windows.Forms.Button();
             this.buttonSimplifyStep = new System.Windows.Forms.Button();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             ((System.ComponentModel.ISupportInitialize)(this.graphView)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // graphView
             // 
-            this.graphView.Location = new System.Drawing.Point(12, 12);
+            this.graphView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.graphView.Location = new System.Drawing.Point(3, 3);
             this.graphView.Name = "graphView";
-            this.graphView.Size = new System.Drawing.Size(357, 389);
+            this.tableLayoutPanel1.SetRowSpan(this.graphView, 3);
+            this.graphView.Size = new System.Drawing.Size(396, 423);
             this.graphView.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.graphView.TabIndex = 0;
             this.graphView.TabStop = false;
@@ -58,9 +62,9 @@
             this.groupBox1.Controls.Add(this.buttonInitGraph);
             this.groupBox1.Controls.Add(this.textBoxInitGraph);
             this.groupBox1.Controls.Add(this.label1);
-            this.groupBox1.Location = new System.Drawing.Point(375, 12);
+            this.groupBox1.Location = new System.Drawing.Point(405, 3);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(332, 141);
+            this.groupBox1.Size = new System.Drawing.Size(332, 137);
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Input";
@@ -98,9 +102,9 @@
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.textBoxStatus);
-            this.groupBox2.Location = new System.Drawing.Point(375, 271);
+            this.groupBox2.Location = new System.Drawing.Point(405, 277);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(332, 130);
+            this.groupBox2.Size = new System.Drawing.Size(332, 128);
             this.groupBox2.TabIndex = 2;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Status";
@@ -118,7 +122,7 @@
             // 
             this.groupBox3.Controls.Add(this.buttonApplyPlanarityStep);
             this.groupBox3.Controls.Add(this.buttonSimplifyStep);
-            this.groupBox3.Location = new System.Drawing.Point(375, 159);
+            this.groupBox3.Location = new System.Drawing.Point(405, 155);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(332, 106);
             this.groupBox3.TabIndex = 3;
@@ -145,15 +149,31 @@
             this.buttonSimplifyStep.UseVisualStyleBackColor = true;
             this.buttonSimplifyStep.Click += new System.EventHandler(this.buttonSimplifyStep_Click);
             // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.ColumnCount = 2;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.Controls.Add(this.graphView, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.groupBox2, 1, 2);
+            this.tableLayoutPanel1.Controls.Add(this.groupBox3, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.groupBox1, 1, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 3;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 55.47945F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 44.52055F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 154F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(805, 429);
+            this.tableLayoutPanel1.TabIndex = 4;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(719, 413);
-            this.Controls.Add(this.groupBox3);
-            this.Controls.Add(this.groupBox2);
-            this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.graphView);
+            this.ClientSize = new System.Drawing.Size(805, 429);
+            this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "Form1";
             this.Text = "Planarity Tester";
             ((System.ComponentModel.ISupportInitialize)(this.graphView)).EndInit();
@@ -162,6 +182,7 @@
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.groupBox3.ResumeLayout(false);
+            this.tableLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -178,6 +199,7 @@
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Button buttonSimplifyStep;
         private System.Windows.Forms.Button buttonApplyPlanarityStep;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
     }
 }
 
